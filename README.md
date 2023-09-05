@@ -53,7 +53,7 @@ More batch oriented data was sourced from libraries like yfinance or other openl
 - Scala:
 ![Scala Streams](images/stream_scala.png)
 
-- Was able to achieve almost parity for ~200K rows per second for processing and ingesting
+- Was able to achieve almost parity for ~20K rows per second for processing and ingesting
 ![Tuned Scala](images/tuned_stream.png)
 
 - Cassandra write-speed throttling to handle a heavy load for a single container with limited resources
