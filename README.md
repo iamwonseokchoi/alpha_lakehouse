@@ -38,7 +38,7 @@ Will try and provide static files for streamed data later on.
 To get minute-level data and connect to Polygon.io websocket, you require a paid API key.
 
 ## To Reproduce 
-**Env. Variables**
+### Env. Variables
 For now, will use `.env` configurations for secrets management
 ```
 TICKERS = ["AAPL", "AMZN", "GOOGL", "MSFT", "NVDA", "TSLA"]
@@ -51,7 +51,7 @@ POLYGON_API_KEY = "<Free key available @Polygon.io but capped to 5 API calls/min
 AWS_ACCESS_KEY = "<Required for S3 Terraform>"
 AWS_ACCESS_KEY_SECRET = "<Can be generated using AWS IAM>"
 ```
-**Step 1: Deploy Terraform**
+### Step 1: Deploy Terraform
 Change the global unique s3 storage name in terraform files then:
 ```
 ~ $ cd s3_data_lake 
@@ -61,7 +61,7 @@ Change the global unique s3 storage name in terraform files then:
 # To destroy s3 lake: terraform destroy
 # Destroy resources as the configs leave the bucket open for simplicity
 ```
-**Step 2: Build Custom Docker images and launch infras**
+### Step 2: Build Custom Docker images and launch infras
 Most base images are synched to ARM64 
 ```
 ~ $ docker build -t custom-airflow -f Dockerfile.airflow .
