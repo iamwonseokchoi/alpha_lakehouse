@@ -7,6 +7,7 @@ logs
 plugins
 *.terraform 
 terraform.* 
+volumes/*
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

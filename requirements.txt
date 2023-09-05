@@ -6,3 +6,8 @@ kafka-python==2.0.2
 python-dotenv==1.0.0
 cassandra-driver==3.28.0
 pandas==1.5.3
+
+
+
+
+

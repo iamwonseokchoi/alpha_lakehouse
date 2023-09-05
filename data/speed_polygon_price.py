@@ -38,7 +38,7 @@ class PolygonPriceAPI:
         if retry_count >= 2:
             logging.info(f"Reached maximum retry count for {symbol} on {date}. Moving on.")
             return
-        url = next_url if next_url else f"https://api.polygon.io/v2/aggs/ticker/{symbol}/range/1/minute/{date}/{date}?adjusted=true&sort=asc&limit=100&apiKey={self.api_key}"
+        url = next_url if next_url else f"https://api.polygon.io/v2/aggs/ticker/{symbol}/range/1/minute/{date}/{date}?adjusted=true&sort=asc&limit=25000&apiKey={self.api_key}"
         try:
             response = requests.get(url)
             data = response.json()

@@ -1,4 +1,4 @@
-name := "SparkStreamPriceTechnicals"
+name := "AlphaLakeHouse"
 
 version := "0.1"
 
@@ -12,3 +12,8 @@ libraryDependencies ++= Seq(
   "io.delta" %% "delta-core" % "1.0.0", 
   "com.typesafe" % "config" % "1.4.1" 
 )
+
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}

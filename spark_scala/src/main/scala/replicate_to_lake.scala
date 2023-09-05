@@ -1,5 +1,6 @@
-import org.apache.spark.sql.{DeltaTable, SparkSession}
-import org.apache.spark.sql.functions.current_timestamp
+import org.apache.spark.sql.{DataFrame, SparkSession}
+import io.delta.tables.DeltaTable
+import org.apache.spark.sql.functions._
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 
@@ -15,7 +16,7 @@ object ReplicateCassandraToDelta {
     val technicalTables = Array("ema", "sma", "macd", "rsi")
 
     val sparkConfigs = Map(
-      "spark.cassandra.connection.host" -> "cassandra",
+      "spark.cassandra.connection.host" -> "localhost",
       "spark.cassandra.connection.port" -> "9042",
       "spark.cassandra.auth.username" -> "cassandra",
       "spark.cassandra.auth.password" -> "cassandra"
@@ -72,8 +73,8 @@ object ReplicateCassandraToDelta {
     df.repartition(col("timestamp"), col("symbol"))
     logger.info(s"Saving $tableName to $deltaPath")
 
-    if (DeltaTable.isDeltaTable(deltaPath)) {
-      val deltaTable = DeltaTable.forPath(deltaPath)
+    if (io.delta.tables.DeltaTable.isDeltaTable(deltaPath)) {
+      val deltaTable = io.delta.tables.DeltaTable.forPath(deltaPath)
       deltaTable.alias("oldData").merge(
         df.alias("newData"),
         "oldData.timestamp = newData.timestamp AND oldData.symbol = newData.symbol"
