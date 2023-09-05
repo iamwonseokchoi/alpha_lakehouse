@@ -1,0 +1,5 @@
+FROM arm64v8/cassandra:latest
+
+RUN sed -i '/enable_materialized_views/d' /etc/cassandra/cassandra.yaml
+
+RUN echo "materialized_views_enabled: true" >> /etc/cassandra/cassandra.yaml

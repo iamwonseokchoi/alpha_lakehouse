@@ -1,0 +1,8 @@
+delta-spark==2.3.0
+findspark==2.0.1
+pyspark==3.3.0
+yfinance==0.2.28 
+kafka-python==2.0.2
+python-dotenv==1.0.0
+cassandra-driver==3.28.0
+pandas==1.5.3

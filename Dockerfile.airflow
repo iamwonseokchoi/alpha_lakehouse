@@ -1,0 +1,35 @@
+FROM apache/airflow:2.7.0
+
+USER root 
+
+# Install OpenJDK-11
+RUN apt update && \
+    apt-get install -y openjdk-11-jdk && \
+    apt-get install -y wget && \
+    apt-get install -y procps && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set JAVA_HOME and update PATH
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-arm64
+ENV PATH $PATH:$JAVA_HOME/bin
+
+# Install Spark 3.3.0 from path (URL no longer supported)
+# RUN wget https://example.com/spark-3.3.0-bin-hadoop3.tgz && \
+#     tar -xzf spark-3.3.0-bin-hadoop3.tgz && \
+#     mv spark-3.3.0-bin-hadoop3 /opt/spark && \
+#     rm spark-3.3.0-bin-hadoop3.tgz
+
+COPY ./spark_version/spark-3.3.0-bin-hadoop3 /opt/spark
+
+ENV SPARK_HOME /opt/spark
+ENV PATH $PATH:$SPARK_HOME/bin
+
+USER airflow 
+
+WORKDIR /app 
+
+COPY requirements.txt /app 
+COPY ./spark /app/spark_scripts
+
+RUN pip install -r requirements.txt
