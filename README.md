@@ -35,7 +35,7 @@ More batch oriented data was sourced from libraries like yfinance or other openl
 
 ## Progress
 - Set up infrastructure with docker networking and DNS hostnames within network
-    - Unfortunately could not handle a ephemeral Docker operator on Kubernetes on local machine so went with static docker containers
+    - Unfortunately could not handle an ephemeral Docker operator on Kubernetes on local machine or free-tier cloud VMs so went with static docker containers
     - Airflow latest version also ran on Python 3.8, which made images for Spark incompatible with ARM/64, but was worked
 
 ![Docker Setup](images/docker.png)
@@ -53,7 +53,7 @@ More batch oriented data was sourced from libraries like yfinance or other openl
 - Scala:
 ![Scala Streams](images/stream_scala.png)
 
-- Was able to achieve almost parity for 200K rows per second for processing and ingesting
+- Was able to achieve almost parity for ~200K rows per second for processing and ingesting
 ![Tuned Scala](images/tuned_stream.png)
 
 - Cassandra write-speed throttling to handle a heavy load for a single container with limited resources
