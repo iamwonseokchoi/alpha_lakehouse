@@ -10,10 +10,12 @@ General architecture is a hybrid lambda + lakehouse, with separate speed and bat
 Utilizing the data streams, aims to generage "α". 
 
 ## Current Status
-**Sep. 4, 2023**
+**Sep. 7, 2023**
 - General speed and batch layers built and tested
 - Core infrastructure dockerized
 - S3 lake terraformed 
+- Tested data formats moving from Cassandara to S3 and also to local
+- Simple exploratory analysis on data for validation
 
 ## Next Steps
 - Large scale ingestion and scraping of news data for sentiment analysis

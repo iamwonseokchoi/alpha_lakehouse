@@ -42,6 +42,9 @@ def read_from_cassandra(spark, keyspace, table):
 def add_newest_timestamp(df):
     return df.withColumn("updated_at", F.current_timestamp())
 
+def repartition_by_timestamp(df):
+    return df.repartition("timestamp", "symbol")
+
 def save_to_delta(spark, df, table_name, s3_path):
     delta_path = f"{s3_path}/{table_name}"
     df = df.repartition("timestamp", "symbol")
@@ -70,7 +73,7 @@ def save_to_delta(spark, df, table_name, s3_path):
 
 if __name__ == "__main__":
     configs = {
-        "spark.cassandra.connection.host": "cassandra",
+        "spark.cassandra.connection.host": "localhost",
         "spark.cassandra.connection.port": "9042",
         "spark.cassandra.auth.username": "cassandra",
         "spark.cassandra.auth.password": "cassandra",
@@ -82,8 +85,10 @@ if __name__ == "__main__":
 
     for table in price_tables:
         dfs_price[table] = add_newest_timestamp(dfs_price[table])
+        dfs_price[table] = repartition_by_timestamp(dfs_price[table])
     for table in technical_tables:
         dfs_technicals[table] = add_newest_timestamp(dfs_technicals[table])
+        dfs_technicals[table] = repartition_by_timestamp(dfs_technicals[table])
         
     s3_path_price = "s3a://wonseokchoi-data-lake-project/lake/cassandra_replication/price"
     s3_path_technicals = "s3a://wonseokchoi-data-lake-project/lake/cassandra_replication/technicals"

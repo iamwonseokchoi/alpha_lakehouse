@@ -9,6 +9,9 @@ plugins
 terraform.* 
 volumes/*
 .DS_Store
+s3_data_lake/terraform.*
+.vscode
+data/lake_replica/*
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
