@@ -15,7 +15,7 @@ session = boto3.Session(
 s3 = session.client('s3')
 
 bucket_name = 'wonseokchoi-data-lake-project'
-directory_path = 'lake/cassandra_replication/technicals/'
+directory_path = 'lake/cassandra_replication/price/'
 
 local_directory = './data/lake_replica/'
 os.makedirs(local_directory, exist_ok=True)

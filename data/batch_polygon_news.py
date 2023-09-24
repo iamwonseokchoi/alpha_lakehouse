@@ -1,99 +1,77 @@
-from datetime import datetime, timedelta
 import os
-from dotenv import load_dotenv
 import json
-import logging
 import requests
-from urllib.parse import urlencode
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor
 
 load_dotenv()
 
-tickers = json.loads(os.getenv("TICKERS"))
-api_key = os.getenv("POLYGON_API_KEY")
+class PolygonNewsAPI:
+    def __init__(self, tickers, start_date, api_key):
+        self.base_url = "https://api.polygon.io/v2/reference/news"
+        self.tickers = tickers
+        self.start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        self.end_date = datetime.today()
+        self.api_key = api_key
+        self.news_data = []
+        self.seen_ids = set()
 
-class PolygonAPI:
-    BASE_URL = "https://api.polygon.io/v2/"
+    def fetch_news(self, ticker, from_date, to_date):
+        params = {
+            "ticker": ticker,
+            "published_utc.gte": from_date,
+            "published_utc.lte": to_date,
+            "order": "asc",
+            "limit": 1000,
+            "sort": "published_utc",
+            "apiKey": self.api_key
+        }
 
-    def __init__(self, api_key=None):
-        self.api_key = api_key or os.getenv('POLYGON_API_KEY')
-        self.session = requests.Session()
-
-    def _get(self, endpoint, params=None):
-        if params is None:
-            params = {}
-        params["apiKey"] = self.api_key
-        url = f"{self.BASE_URL}{endpoint}"
-        try:
-            response = self.session.get(url, params=params)
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
-            logging.error(f"Failed to fetch data: {e}")
-            return None
-
-    def get_all_news(self, ticker, filters=None):
-        all_news = []
-        filters = filters or {}
-        filters['ticker'] = ticker
-        next_url = None
-
-        while True:
-            response_data = self._get("reference/news", params=filters) if not next_url else self._get(next_url.replace(self.BASE_URL, ""))
-            if response_data:
-                all_news.extend(response_data.get('results', []))
-                next_url = response_data.get('next_url')
-                if not next_url:
+        response = requests.get(self.base_url, params=params)
+        if response.status_code == 200:
+            json_data = response.json()
+            for result in json_data["results"]:
+                article_id = result.get("id")
+                if article_id not in self.seen_ids:
+                    self.news_data.append(result)
+                    self.seen_ids.add(article_id)
+                    
+            next_url = json_data.get("next_url")
+            while next_url:
+                next_response = requests.get(next_url)
+                if next_response.status_code == 200:
+                    next_json_data = next_response.json()
+                    for result in next_json_data["results"]:
+                        article_id = result.get("id")
+                        if article_id not in self.seen_ids:
+                            self.news_data.append(result)
+                            self.seen_ids.add(article_id)
+                    next_url = next_json_data.get("next_url")
+                else:
+                    print(f"Failed to fetch next_url data for {ticker}, status code: {next_response.status_code}")
                     break
-            else:
-                logging.error("Failed to retrieve news.")
-                break
+        else:
+            print(f"Failed to fetch news data for {ticker}, status code: {response.status_code}")
 
-        return all_news
+    def fetch_for_ticker(self, ticker):
+        curr_date = self.start_date
+        delta = timedelta(days=7)  # 1 week time frame, adjust as needed
 
+        while curr_date <= self.end_date:
+            from_date = curr_date.strftime("%Y-%m-%d")
+            to_date = (curr_date + delta).strftime("%Y-%m-%d")
+            self.fetch_news(ticker, from_date, to_date)
+            curr_date += delta + timedelta(days=1)
 
-# from data.news_data import PolygonAPI
-# from pyspark.sql import SparkSession
-# from pyspark.sql.types import *
-# import pyspark.sql.functions as F
-# from dotenv import load_dotenv
-# from delta.tables import DeltaTable
-# from delta import *
-# import logging
-# import json
-# import os
+    def fetch_all_tickers(self):
+        with ThreadPoolExecutor() as executor:
+            executor.map(self.fetch_for_ticker, self.tickers)
 
+if __name__ == "__main__":
+    tickers = json.loads(os.getenv("TICKERS"))
+    api_key = os.getenv("POLYGON_API_KEY")
+    start_date = "2015-01-01"
 
-# # Initialize
-# load_dotenv()
-# logging.basicConfig(level=logging.INFO)
-# aws_key = os.getenv('AWS_ACCESS_KEY')
-# aws_secret = os.getenv('AWS_ACCESS_KEY_SECRET')
-# symbols = json.loads(os.getenv('TICKERS'))
-# api_client = PolygonAPI()
-# spark = SparkSession.builder \
-#     .appName("KafkaNewsToLake") \
-#     .config("spark.hadoop.fs.s3a.access.key", aws_key) \
-#     .config("spark.hadoop.fs.s3a.secret.key", aws_secret) \
-#     .config("spark.hadoop.fs.s3a.endpoint", "s3.ap-northeast-2.amazonaws.com") \
-#     .config("spark.sql.sources.partitionOverwriteMode", "dynamic") \
-#     .config("spark.databricks.delta.schema.autoMerge.enabled", "true") \
-#     .config('spark.hadoop.fs.s3a.aws.credentials.provider', 'org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider')
-# spark.sparkContext.setLogLevel("ERROR")
-
-# # Define API filters for Polygon class 
-# filters = {
-#     'published_utc.gt': '2023-08-30',
-#     'order': 'desc',
-#     'limit': 100,
-#     'sort': 'published_utc'
-# }
-
-
-# # Fetch all news for TSLA
-# all_news_data = api_client.get_all_news('TSLA', filters=filters)
-
-# if all_news_data:
-#     logging.info(f"Successfully retrieved {len(all_news_data)} news items.")
-#     print(all_news_data)
-# else:
-#     logging.error("Failed to retrieve news.")
+    polygon_api = PolygonNewsAPI(tickers, start_date, api_key)
+    polygon_api.fetch_all_tickers()

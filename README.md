@@ -10,12 +10,13 @@ General architecture is a hybrid lambda + lakehouse, with separate speed and bat
 Utilizing the data streams, aims to generage "α". 
 
 ## Current Status
-**Sep. 7, 2023**
+**Sep. 24, 2023**
 - General speed and batch layers built and tested
 - Core infrastructure dockerized
 - S3 lake terraformed 
 - Tested data formats moving from Cassandara to S3 and also to local
-- Simple exploratory analysis on data for validation
+- All batch and speed layers complete with S3 lake and WH connections
+- Jupyter notebook environment for ML/DL analysis complete
 
 ## Next Steps
 - Large scale ingestion and scraping of news data for sentiment analysis
@@ -69,6 +70,13 @@ More batch oriented data was sourced from libraries like yfinance or other openl
     - Will work on batching for repartitioning or coalescing & file optimization later down the line to handle small-files
 ![S3 Lake](images/lake.png)
 
+- Data pipeline and data architecture layers all complete including news data ingestion (semi-structured)
+    - Speed and batch layer data all ingested and running either on Cassandra (speed layer) or Delta Lake (batch and speed layers)
+    - Warehouse format for OLAP queries enforced for cleaned datasets, and Lake curation also complete
+    - Can now build and test models using Jupyer notebook environment
+![Batch Jobs](images/batch_complete.png)
+![Batch Jobs](images/news_batch.png)
+![Batch Jobs](images/notebook_sample.png)
 
 
 ## Caveats

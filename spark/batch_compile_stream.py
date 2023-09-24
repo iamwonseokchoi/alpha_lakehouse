@@ -65,3 +65,9 @@ if __name__ == "__main__":
     tickers = json.loads(os.getenv("TICKERS"))
     aggregator = StockDataAggregator(tickers)
     aggregator.aggregate_stock_data()
+
+
+
+# spark-submit \
+#   --packages com.datastax.spark:spark-cassandra-connector_2.12:3.4.1,\
+#   spark/batch_compile_stream.py
