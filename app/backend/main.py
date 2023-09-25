@@ -1,52 +1,38 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
-import json
-from dotenv import load_dotenv
-import os
-import websockets
+from fastapi import FastAPI
+from cassandra.cluster import Cluster
+from datetime import datetime, timezone, timedelta
+import time
+from fastapi.middleware.cors import CORSMiddleware
 
-# Load environment variables
-load_dotenv()
-POLYGON_API_KEY = os.getenv("POLYGON_API_KEY")
-
+# Initialize FastAPI backend
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=True
+)
 
-async def connect_to_polygon():
-    uri = "wss://delayed.polygon.io/stocks"
+# Initialize Cassandra Connection
+cluster = Cluster()
+session = cluster.connect('price')
 
-    async with websockets.connect(uri) as websocket:
-        auth_data = json.dumps({
-            "action": "auth",
-            "params": POLYGON_API_KEY
-        })
-        await websocket.send(auth_data)
 
-        subscribe_data = json.dumps({
-            "action": "subscribe",
-            "params": "A.GOOGL"
-        })
-        await websocket.send(subscribe_data)
+@app.get("/tables/{table_name}")
+async def read_table(table_name: str):
+    today = datetime.now().astimezone(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    three_days_ago = today - timedelta(days=3)
+    three_days_ago_unix = int(time.mktime(three_days_ago.timetuple())) * 1000
+    symbol = table_name.upper()
+    
+    query = f"SELECT * FROM price.{table_name} WHERE symbol = '{symbol}' AND timestamp >= {three_days_ago_unix} ORDER BY timestamp DESC ALLOW FILTERING;"
+    rows = session.execute(query)
 
-        async for message in websocket:
-            yield message
+    processed_rows = []
+    for row in rows:
+        row_dict = row._asdict()
+        row_dict['timestamp'] = datetime.utcfromtimestamp(row_dict['timestamp'] / 1000).strftime('%Y-%m-%d %H:%M:%S')
+        processed_rows.append(row_dict)
 
-# This could be replaced by a more robust in-memory database like Redis in a production environment
-latest_stock_data = None
-
-@app.websocket("/stocks")
-async def websocket_endpoint(websocket: WebSocket):
-    global latest_stock_data
-    await websocket.accept()
-    try:
-        async for polygon_message in connect_to_polygon():
-            latest_stock_data = json.loads(polygon_message)
-            await websocket.send_text(f"Polygon.io Data: {polygon_message}")
-    except WebSocketDisconnect:
-        pass
-
-@app.get("/stocks/show")
-async def get_latest_stock_data():
-    if latest_stock_data is not None:
-        return JSONResponse(content=latest_stock_data)
-    else:
-        return JSONResponse(content={"message": "No stock data available"}, status_code=404)
+    return {"data": processed_rows}

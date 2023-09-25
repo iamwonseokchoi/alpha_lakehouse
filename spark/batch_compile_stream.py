@@ -39,7 +39,7 @@ class StockDataAggregator:
     def aggregate_stock_data(self):
         spark = (SparkSession.builder
                 .appName("PriceDataAggregator")
-                .config("spark.cassandra.connection.host", "localhost")
+                .config("spark.cassandra.connection.host", "cassandra")
                 .config("spark.cassandra.connection.port", "9042")
                 .config("spark.cassandra.auth.username", "cassandra")
                 .config("spark.cassandra.auth.password", "cassandra")

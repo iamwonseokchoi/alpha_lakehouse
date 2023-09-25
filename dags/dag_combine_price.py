@@ -69,7 +69,7 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id = 'BATCH_combine_hourly_price',
+    dag_id = 'BATCH_combine_minute_price',
     default_args = default_args,
     schedule_interval = timedelta(minutes=5),
     tags = ['batch', 'cassandra'],

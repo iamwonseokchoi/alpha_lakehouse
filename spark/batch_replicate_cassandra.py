@@ -73,7 +73,7 @@ def save_to_delta(spark, df, table_name, s3_path):
 
 if __name__ == "__main__":
     configs = {
-        "spark.cassandra.connection.host": "localhost",
+        "spark.cassandra.connection.host": "cassandra",
         "spark.cassandra.connection.port": "9042",
         "spark.cassandra.auth.username": "cassandra",
         "spark.cassandra.auth.password": "cassandra",

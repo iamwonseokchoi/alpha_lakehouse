@@ -10,19 +10,18 @@ General architecture is a hybrid lambda + lakehouse, with separate speed and bat
 Utilizing the data streams, aims to generage "α". 
 
 ## Current Status
-**Sep. 24, 2023**
+**Sep. 25, 2023**
 - General speed and batch layers built and tested
 - Core infrastructure dockerized
 - S3 lake terraformed 
 - Tested data formats moving from Cassandara to S3 and also to local
 - All batch and speed layers complete with S3 lake and WH connections
 - Jupyter notebook environment for ML/DL analysis complete
+- Final App WIP
 
 ## Next Steps
-- Large scale ingestion and scraping of news data for sentiment analysis
-- MDM and security features
-- LSTM/BilSTM modeling and testing
-- API set up with simple app (FastAPI, VueJS)
+- AI/ML portion
+- App portion continue
 
 ## Technologies
 - **Languages:** Python, Scala
@@ -78,6 +77,9 @@ More batch oriented data was sourced from libraries like yfinance or other openl
 ![Batch Jobs](images/news_batch.png)
 ![Batch Jobs](images/notebook_sample.png)
 
+- Simple backend/frontend in development
+    - Select company and show most recent prices from speed layer
+![Batch Jobs](images/frontend_1.png)
 
 ## Caveats
 Will try and provide static files for streamed data later on. 
@@ -115,5 +117,19 @@ Most base images are synched to ARM64
 ~ $ docker-compose up -d
 ```
 Default ports used, but check `docker-compose.yaml`
+
+### Step 3: Application Layer
+Backend
+```
+~ $ cd app/backend
+~ $ uvicorn main:app --reload
+```
+Frontend
+```
+~ $ cd app/frontend
+~ $ npm install
+~ $ npm run serve 
+# Build optional
+```
 
 **E.O.D**

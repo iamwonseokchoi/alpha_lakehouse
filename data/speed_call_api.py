@@ -7,8 +7,8 @@ def main():
     polygon_price_api = PolygonPriceAPI()
     polygon_technicals_api = PolygonTechnicalsAPI()
 
-    price_thread = threading.Thread(target=polygon_price_api.execute, args=(14, 0))
-    technical_thread = threading.Thread(target=polygon_technicals_api.execute, args=(14, 0))
+    price_thread = threading.Thread(target=polygon_price_api.execute, args=(3, 0))
+    technical_thread = threading.Thread(target=polygon_technicals_api.execute, args=(3, 0))
 
     price_thread.start()
     technical_thread.start()

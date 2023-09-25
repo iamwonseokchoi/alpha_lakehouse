@@ -1,7 +1,6 @@
 from airflow import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator 
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
 
 
 default_args = {
@@ -13,15 +12,15 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id = 'BATCH_news_daily_batch',
+    dag_id = 'BATCH_clean_prices',
     default_args = default_args,
     schedule_interval = '@daily',
-    tags = ['batch', 'delta_lake'],
-    description = 'Daily news data on tickers to Delta Lake tables as batch'
+    tags = ['batch', 'delta_lake', 'silver'],
+    description = 'Clean prices data and save as delta lake'
 )
 
 batch_news_spark = SparkSubmitOperator(
-    application='/app/spark_scripts/batch_news_daily.py',
+    application='/app/spark_scripts/batch_preprocess.py',
     conn_id='spark_cluster',
     task_id='spark_submit_task',
     packages='io.delta:delta-core_2.12:2.3.0,org.apache.hadoop:hadoop-aws:3.2.2',
