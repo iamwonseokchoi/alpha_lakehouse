@@ -6,6 +6,10 @@ Uses stock price data at high frequencies (minutes and secods) to simulate high-
 
 General architecture is a hybrid lambda + lakehouse, with separate speed and batch layers. Also incorporates usage of AWS S3 and delta lake abstraction to simulate both the data lake and warehouse (hence data lakehouse).
 
+
+![gif](https://github.com/iamwonseokchoi/alpha_lakehouse/blob/main/images/gif.gif?raw=true)
+
+
 ![Predictions](images/dl.png)
 --
 ![Historical Price](images/historical.png)
@@ -84,36 +88,41 @@ Frontend
 - Batch ingested second-level technical datas and minute-level price data to Cassandra
     - Optimized using scala for heavier stream loads with some tuning
 - Pyspark:
+
 ![Pyspark Streams](images/stream_pyspark.png)
 - Scala:
+
 ![Scala Streams](images/stream_scala.png)
 
 - Was able to achieve almost parity for ~20K rows per second for processing and ingesting
+
 ![Tuned Scala](images/tuned_stream.png)
 
 - Cassandra write-speed throttling to handle a heavy load for a single container with limited resources
+
 ![Cassandra](images/cassandra.png)
 
 - Ran Periodic batches to sync and replicate to S3 lake
+
 ![Batch Jobs](images/batch.png)
 
 - Lake data versioning using Delta abstraction as a sort of warehouse
     - Partitioned by timestamps for higher analytic read perfomance
     - Will work on batching for repartitioning or coalescing & file optimization later down the line to handle small-files
-![S3 Lake](images/lake.png)
+
+![S3 Lake](images/s3.png)
 
 - Data pipeline and data architecture layers all complete including news data ingestion (semi-structured)
     - Speed and batch layer data all ingested and running either on Cassandra (speed layer) or Delta Lake (batch and speed layers)
     - Warehouse format for OLAP queries enforced for cleaned datasets, and Lake curation also complete
     - Can now build and test models using Jupyer notebook environment
+
 ![Batch Jobs](images/batch_complete.png)
-![Batch Jobs](images/news_batch.png)
-![Batch Jobs](images/notebook_sample.png)
 
 
 ## Caveats
-Will try and provide static files for streamed data later on. 
 To get minute-level data and connect to Polygon.io websocket, you require a paid API key.
+Will maybe later upload a small sample for localizing.
 
 
 **E.O.D**
