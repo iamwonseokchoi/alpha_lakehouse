@@ -12,19 +12,20 @@ General architecture is a hybrid lambda + lakehouse, with separate speed and bat
 
 ![Predictions](images/dl.png)
 --
-![Historical Price](images/historical.png)
+![News](images/news.png)
 --
 ![Indicators](images/technicals.png)
 
 ## Technologies
 - **Languages:** Python, Scala
-- **Tools:** Kafka, Spark, Terraform, Docker, Cassandra, Jupyter, FastAPI, Streamlit
+- **Tools:** Kafka, Spark, Terraform, Docker, Cassandra, Jupyter, FastAPI, Streamlit, ML/DL
 - **Services:** AWS S3
 
 ## Data Used
 Utilized [Polygon.io](https://polygon.io) financial API, and was incremented as follows:
 - 1-second interval price data (stream)
 - 1-minute interval technical indicator data (stream)
+- News Data (batch)
 - Realtime Websocket market data (client + stream)
 
 ## Architecture
