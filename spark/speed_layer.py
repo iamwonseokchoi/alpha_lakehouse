@@ -1,7 +1,7 @@
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, DoubleType, LongType
-from pyspark.sql.functions import current_timestamp, col, from_json
+from pyspark.sql.types import ArrayType, StructType, StructField, StringType, DoubleType, LongType
+from pyspark.sql.functions import current_timestamp, col, from_json, explode
 
 # Define schema for incoming Kafka data
 schema_prices = StructType([
@@ -30,6 +30,26 @@ schema_macd = StructType([
     StructField("symbol", StringType(), False)
 ])
 
+schema_ws_list = ArrayType(
+    StructType([
+        StructField("ev", StringType(), True),
+        StructField("sym", StringType(), False),
+        StructField("v", LongType(), True),
+        StructField("av", LongType(), True),
+        StructField("op", DoubleType(), True),
+        StructField("vw", DoubleType(), True),
+        StructField("o", DoubleType(), True),
+        StructField("c", DoubleType(), True),
+        StructField("h", DoubleType(), True),
+        StructField("l", DoubleType(), True),
+        StructField("a", DoubleType(), True),
+        StructField("z", LongType(), True),
+        StructField("s", LongType(), False),
+        StructField("e", LongType(), False)
+    ])
+)
+
+
 # Kryo Serialization
 conf = SparkConf().set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
@@ -50,8 +70,9 @@ kafkaStreamDF = spark \
     .readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "localhost:9092") \
-    .option("subscribe", "aapl,amzn,googl,msft,nvda,tsla,sma,ema,macd,rsi") \
+    .option("subscribe", "aapl,amzn,googl,msft,nvda,tsla,sma,ema,macd,rsi,websocket") \
     .option("failOnDataLoss", "false") \
+    .option("mode", "DROPMALFORMED") \
     .load()
 
 # ForeachBatch Logic
@@ -70,6 +91,9 @@ def process_batch(df, batch_id):
             'ema': schema_stats,
             'macd': schema_macd,
             'rsi': schema_stats
+        }
+        websocket_schemas = {
+            'ws': schema_ws_list
         }
 
         # For price data
@@ -92,6 +116,8 @@ def process_batch(df, batch_id):
                     .format("org.apache.spark.sql.cassandra") \
                     .mode("append") \
                     .options(table=topic, keyspace="price") \
+                    .option("spark.cassandra.output.batch.size.rows", "auto") \
+                    .option("spark.cassandra.output.consistency.level", "LOCAL_QUORUM") \
                     .save()
 
         # For technicals data
@@ -108,7 +134,43 @@ def process_batch(df, batch_id):
                     .format("org.apache.spark.sql.cassandra") \
                     .mode("append") \
                     .options(table=topic, keyspace="technicals") \
+                    .option("spark.cassandra.output.batch.size.rows", "auto") \
+                    .option("spark.cassandra.output.consistency.level", "LOCAL_QUORUM") \
                     .save()
+        
+        # For websocket data
+        filtered_ws_df = df.filter(df["topic"] == "websocket")
+        if not filtered_ws_df.isEmpty():
+            filtered_ws_df = filtered_ws_df \
+                .select(from_json(col("value").cast("string"), schema_ws_list).alias("parsed_value")) \
+                .select(explode("parsed_value").alias("single_value")) \
+                .select("single_value.*") \
+                .withColumnRenamed("ev", "event") \
+                .withColumnRenamed("sym", "symbol") \
+                .withColumnRenamed("v", "volume") \
+                .withColumnRenamed("av", "agg_volume") \
+                .withColumnRenamed("op", "open_price") \
+                .withColumnRenamed("vw", "volume_weighted") \
+                .withColumnRenamed("o", "open") \
+                .withColumnRenamed("c", "close") \
+                .withColumnRenamed("h", "high") \
+                .withColumnRenamed("l", "low") \
+                .withColumnRenamed("a", "avg_price") \
+                .withColumnRenamed("z", "total_trades") \
+                .withColumnRenamed("s", "start_time") \
+                .withColumnRenamed("e", "end_time") \
+                .withColumn("updated_at", current_timestamp()) \
+                .na.drop(subset=["symbol", "start_time", "end_time"])
+            
+            filtered_ws_df.show()
+
+            filtered_ws_df.write \
+                .format("org.apache.spark.sql.cassandra") \
+                .mode("append") \
+                .options(table="ws", keyspace="websocket") \
+                .option("spark.cassandra.output.batch.size.rows", "auto") \
+                .option("spark.cassandra.output.consistency.level", "LOCAL_QUORUM") \
+                .save()
 
 # Write
 query = kafkaStreamDF \

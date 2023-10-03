@@ -1,5 +1,16 @@
 FROM arm64v8/cassandra:latest
 
-RUN sed -i '/enable_materialized_views/d' /etc/cassandra/cassandra.yaml
-
-RUN echo "materialized_views_enabled: true" >> /etc/cassandra/cassandra.yaml
+# Enable materialized views and increase various settings
+RUN sed -i '/enable_materialized_views/d' /etc/cassandra/cassandra.yaml && \
+    echo "materialized_views_enabled: true" >> /etc/cassandra/cassandra.yaml && \
+    sed -i '/concurrent_reads:/c\concurrent_reads: 128' /etc/cassandra/cassandra.yaml && \
+    sed -i '/concurrent_writes:/c\concurrent_writes: 128' /etc/cassandra/cassandra.yaml && \
+    sed -i '/commitlog_total_space_in_mb:/c\commitlog_total_space_in_mb: 8192' /etc/cassandra/cassandra.yaml && \
+    sed -i '/concurrent_counter_writes:/c\concurrent_counter_writes: 32' /etc/cassandra/cassandra.yaml && \
+    sed -i '/memtable_heap_space_in_mb:/c\memtable_heap_space_in_mb: 1024' /etc/cassandra/cassandra.yaml && \
+    sed -i '/memtable_offheap_space_in_mb:/c\memtable_offheap_space_in_mb: 1024' /etc/cassandra/cassandra.yaml && \
+    sed -i '/key_cache_save_period:/c\key_cache_save_period: 14400' /etc/cassandra/cassandra.yaml && \
+    sed -i '/counter_cache_save_period:/c\counter_cache_save_period: 7200' /etc/cassandra/cassandra.yaml && \
+    sed -i '/write_request_timeout_in_ms:/c\write_request_timeout_in_ms: 5000' /etc/cassandra/cassandra.yaml && \
+    sed -i '/read_request_timeout_in_ms:/c\read_request_timeout_in_ms: 5000' /etc/cassandra/cassandra.yaml && \
+    echo "phi_convict_threshold: 8" >> /etc/cassandra/cassandra.yaml

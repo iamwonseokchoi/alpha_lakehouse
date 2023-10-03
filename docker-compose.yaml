@@ -82,16 +82,56 @@ services:
 
   cassandra:
     image: 'custom-cassandra:latest'
-    container_name: cassandra
+    container_name: cassandra-node1
     hostname: cassandra
     ports:
       - '9042:9042'
+    environment:
+      - CASSANDRA_SEEDS=cassandra-node1,cassandra-node2,cassandra-node3
     volumes:
-      - ./volumes:/home
-      - ./volumes/cassandra_data:/var/lib/cassandra
+      - ./volumes/cassandra_data1:/var/lib/cassandra
     networks:
       datapipeline:
         ipv4_address: 172.18.0.6
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+
+  cassandra-node2:
+    image: 'custom-cassandra:latest'
+    container_name: cassandra-node2
+    hostname: cassandra-node2
+    environment:
+      - CASSANDRA_SEEDS=cassandra-node1,cassandra-node2,cassandra-node3
+    volumes:
+      - ./volumes/cassandra_data2:/var/lib/cassandra
+    networks:
+      datapipeline:
+        ipv4_address: 172.18.0.18
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+
+  cassandra-node3:
+    image: 'custom-cassandra:latest'
+    container_name: cassandra-node3
+    hostname: cassandra-node3
+    environment:
+      - CASSANDRA_SEEDS=cassandra-node1,cassandra-node2,cassandra-node3
+    volumes:
+      - ./volumes/cassandra_data3:/var/lib/cassandra
+    networks:
+      datapipeline:
+        ipv4_address: 172.18.0.19
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
 
   postgres:
     image: postgres:13
@@ -327,7 +367,7 @@ services:
         condition: service_completed_successfully
 
   spark:
-    image: bitnami/spark:3.3.0
+    image: bitnami/spark:3.3
     user: root 
     hostname: spark
     networks:
@@ -348,7 +388,7 @@ services:
         - "7077:7077"
 
   spark-worker-1:
-    image: bitnami/spark:3.3.0
+    image: bitnami/spark:3.3
     user: root
     networks:
       datapipeline:
@@ -358,28 +398,8 @@ services:
     environment:
         - SPARK_MODE=worker
         - SPARK_MASTER_URL=spark://spark:7077
-        - SPARK_WORKER_MEMORY=2G
-        - SPARK_WORKER_CORES=1
-        - SPARK_RPC_AUTHENTICATION_ENABLED=no
-        - SPARK_RPC_ENCRYPTION_ENABLED=no
-        - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-        - SPARK_SSL_ENABLED=no
-    volumes:
-        - ./spark:/app/spark_scripts 
-
-  spark-worker-2:
-    image: bitnami/spark:3.3.0
-    user: root
-    networks:
-      datapipeline:
-        ipv4_address: 172.18.0.18
-    depends_on:
-      - spark
-    environment:
-        - SPARK_MODE=worker
-        - SPARK_MASTER_URL=spark://spark:7077
-        - SPARK_WORKER_MEMORY=2G
-        - SPARK_WORKER_CORES=1
+        - SPARK_WORKER_MEMORY=6G
+        - SPARK_WORKER_CORES=6
         - SPARK_RPC_AUTHENTICATION_ENABLED=no
         - SPARK_RPC_ENCRYPTION_ENABLED=no
         - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no

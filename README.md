@@ -1,5 +1,4 @@
 # Fishing for α on the Lakehouse
-**Work in Progress**
 ## Overview
 Personal project aiming to go the full A ~ Z in terms of data lifecycle incorporating data ingestion, processing, analytics & dashboarding, ML/DL as well as general software development for presentation. 
 
@@ -7,87 +6,29 @@ Uses stock price data at high frequencies (minutes and secods) to simulate high-
 
 General architecture is a hybrid lambda + lakehouse, with separate speed and batch layers. Also incorporates usage of AWS S3 and delta lake abstraction to simulate both the data lake and warehouse (hence data lakehouse).
 
-Utilizing the data streams, aims to generage "α". 
-
-## Current Status
-**Sep. 25, 2023**
-- General speed and batch layers built and tested
-- Core infrastructure dockerized
-- S3 lake terraformed 
-- Tested data formats moving from Cassandara to S3 and also to local
-- All batch and speed layers complete with S3 lake and WH connections
-- Jupyter notebook environment for ML/DL analysis complete
-- Final App WIP
-
-## Next Steps
-- AI/ML portion
-- App portion continue
+![Predictions](images/dl.png)
+--
+![Historical Price](images/historical.png)
+--
+![Indicators](images/technicals.png)
 
 ## Technologies
 - **Languages:** Python, Scala
-- **Tools:** Kafka, Spark, Terraform, Docker, Cassandra, Jupyter
-- **Services:** AWS S3,
+- **Tools:** Kafka, Spark, Terraform, Docker, Cassandra, Jupyter, FastAPI, Streamlit
+- **Services:** AWS S3
 
 ## Data Used
-Utilized [Polygon.io](https://polygon.io) financial API. Plans to also utilize websockets in the future.
-More batch oriented data was sourced from libraries like yfinance or other openly available sources. 
+Utilized [Polygon.io](https://polygon.io) financial API, and was incremented as follows:
+- 1-second interval price data (stream)
+- 1-minute interval technical indicator data (stream)
+- Realtime Websocket market data (client + stream)
 
 ## Architecture
 ![Architecture Overview](images/architecture.png)
 
-## Progress
-- Set up infrastructure with docker networking and DNS hostnames within network
-    - Unfortunately could not handle an ephemeral Docker operator on Kubernetes on local machine or free-tier cloud VMs so went with static docker containers
-    - Airflow latest version also ran on Python 3.8, which made images for Spark incompatible with ARM/64, but was worked
-
-![Docker Setup](images/docker.png)
-
-- Airflow, Spark, Cassandra components can all communicate with each other
-- Set up Airflow SparkSubmitOperator with networked spark cluster
-- Also set up Spark via volume mount to the Airflow container for simple jobs
-
-![Spark Operators](images/sparkOperator.png)
-
-- Batch ingested second-level technical datas and minute-level price data to Cassandra
-    - Optimized using scala for heavier stream loads with some tuning
-- Pyspark:
-![Pyspark Streams](images/stream_pyspark.png)
-- Scala:
-![Scala Streams](images/stream_scala.png)
-
-- Was able to achieve almost parity for ~20K rows per second for processing and ingesting
-![Tuned Scala](images/tuned_stream.png)
-
-- Cassandra write-speed throttling to handle a heavy load for a single container with limited resources
-![Cassandra](images/cassandra.png)
-
-- Ran Periodic batches to sync and replicate to S3 lake
-![Batch Jobs](images/batch.png)
-
-- Lake data versioning using Delta abstraction as a sort of warehouse
-    - Partitioned by timestamps for higher analytic read perfomance
-    - Will work on batching for repartitioning or coalescing & file optimization later down the line to handle small-files
-![S3 Lake](images/lake.png)
-
-- Data pipeline and data architecture layers all complete including news data ingestion (semi-structured)
-    - Speed and batch layer data all ingested and running either on Cassandra (speed layer) or Delta Lake (batch and speed layers)
-    - Warehouse format for OLAP queries enforced for cleaned datasets, and Lake curation also complete
-    - Can now build and test models using Jupyer notebook environment
-![Batch Jobs](images/batch_complete.png)
-![Batch Jobs](images/news_batch.png)
-![Batch Jobs](images/notebook_sample.png)
-
-- Simple backend/frontend in development
-    - Select company and show most recent prices from speed layer
-![Batch Jobs](images/frontend_1.png)
-
-## Caveats
-Will try and provide static files for streamed data later on. 
-To get minute-level data and connect to Polygon.io websocket, you require a paid API key.
-
 ## To Reproduce 
 ### Env. Variables
-For now, will use `.env` configurations for secrets management
+Simply uses `.env` configurations for secrets management
 ```
 TICKERS = ["AAPL", "AMZN", "GOOGL", "MSFT", "NVDA", "TSLA"]
 
@@ -127,9 +68,52 @@ Backend
 Frontend
 ```
 ~ $ cd app/frontend
-~ $ npm install
-~ $ npm run serve 
-# Build optional
+~ $ streamlit run Homepage.py
 ```
+
+## Progression Screenshots
+
+![Docker Setup](images/docker.png)
+
+- Airflow, Spark, Cassandra components can all communicate with each other
+- Set up Airflow SparkSubmitOperator with networked spark cluster
+- Also set up Spark via volume mount to the Airflow container for simple jobs
+
+![Spark Operators](images/sparkOperator.png)
+
+- Batch ingested second-level technical datas and minute-level price data to Cassandra
+    - Optimized using scala for heavier stream loads with some tuning
+- Pyspark:
+![Pyspark Streams](images/stream_pyspark.png)
+- Scala:
+![Scala Streams](images/stream_scala.png)
+
+- Was able to achieve almost parity for ~20K rows per second for processing and ingesting
+![Tuned Scala](images/tuned_stream.png)
+
+- Cassandra write-speed throttling to handle a heavy load for a single container with limited resources
+![Cassandra](images/cassandra.png)
+
+- Ran Periodic batches to sync and replicate to S3 lake
+![Batch Jobs](images/batch.png)
+
+- Lake data versioning using Delta abstraction as a sort of warehouse
+    - Partitioned by timestamps for higher analytic read perfomance
+    - Will work on batching for repartitioning or coalescing & file optimization later down the line to handle small-files
+![S3 Lake](images/lake.png)
+
+- Data pipeline and data architecture layers all complete including news data ingestion (semi-structured)
+    - Speed and batch layer data all ingested and running either on Cassandra (speed layer) or Delta Lake (batch and speed layers)
+    - Warehouse format for OLAP queries enforced for cleaned datasets, and Lake curation also complete
+    - Can now build and test models using Jupyer notebook environment
+![Batch Jobs](images/batch_complete.png)
+![Batch Jobs](images/news_batch.png)
+![Batch Jobs](images/notebook_sample.png)
+
+
+## Caveats
+Will try and provide static files for streamed data later on. 
+To get minute-level data and connect to Polygon.io websocket, you require a paid API key.
+
 
 **E.O.D**

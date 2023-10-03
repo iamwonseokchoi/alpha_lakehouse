@@ -27,10 +27,10 @@ class CreateSparkSession:
         os.environ["PYSPARK_SUBMIT_ARGS"] = "--master local[*] pyspark-shell"
 
     def create_spark_session(self):
-        spark_jars_packages = "com.amazonaws:aws-java-sdk:1.11.563,org.apache.hadoop:hadoop-aws:3.2.2,io.delta:delta-core_2.12:2.4.0"
+        spark_jars_packages = "com.amazonaws:aws-java-sdk:1.11.563,org.apache.hadoop:hadoop-aws:3.2.2,io.delta:delta-core_2.12:2.4.0,com.datastax.spark:spark-cassandra-connector_2.12:3.1.0"
         spark = (
             SparkSession.builder.master("local[*]")
-            .appName("PySparkLocal")
+            .appName("PysparkSessionWithDeltaS3")
             .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
             .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
             .config("spark.hadoop.fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
@@ -39,11 +39,18 @@ class CreateSparkSession:
             .config("spark.hadoop.fs.s3a.connection.timeout", "3600000")
             .config("spark.hadoop.fs.s3a.connection.maximum", "1000")
             .config("spark.hadoop.fs.s3a.threads.max", "1000")
+            .config("spark.driver.memory", "8g")
+            .config("spark.executor.memory", "8g")
+            .config("spark.memory.fraction", 0.9)  
             .config("spark.jars.packages", spark_jars_packages)
             .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
             .config("spark.databricks.delta.schema.autoMerge.enabled", "true")
             .config("spark.hadoop.fs.s3a.endpoint", "s3.ap-northeast-2.amazonaws.com")
             .config("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
+            .config("spark.cassandra.connection.host", "localhost")
+            .config("spark.cassandra.connection.port", "9042")
+            .config("spark.cassandra.auth.username", "cassandra")
+            .config("spark.cassandra.auth.password", "cassandra")
             .getOrCreate()
         )
         spark.sparkContext.setLogLevel("ERROR")

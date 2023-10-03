@@ -18,7 +18,7 @@ class PolygonPriceAPI:
         self.api_key = os.getenv('POLYGON_API_KEY')
         self.tickers = json.loads(os.getenv('TICKERS'))
 
-    def get_date_range(self, days_ago_start=730, days_ago_end=1):
+    def get_date_range(self, days_ago_start=1825, days_ago_end=1):
         end_date = datetime.now() - timedelta(days=days_ago_end) 
         start_date = datetime.now() - timedelta(days=days_ago_start) 
         return [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range((end_date - start_date).days + 1)]
@@ -38,7 +38,7 @@ class PolygonPriceAPI:
         if retry_count >= 2:
             logging.info(f"Reached maximum retry count for {symbol} on {date}. Moving on.")
             return
-        url = next_url if next_url else f"https://api.polygon.io/v2/aggs/ticker/{symbol}/range/1/minute/{date}/{date}?adjusted=true&sort=asc&limit=25000&apiKey={self.api_key}"
+        url = next_url if next_url else f"https://api.polygon.io/v2/aggs/ticker/{symbol}/range/1/second/{date}/{date}?adjusted=true&sort=asc&limit=50000&apiKey={self.api_key}"
         try:
             response = requests.get(url)
             data = response.json()
